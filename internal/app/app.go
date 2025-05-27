@@ -22,6 +22,10 @@ func URLPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
+	if len(body) == 0 {
+		http.Error(w, "Request body is empty", http.StatusBadRequest)
+		return
+	}
 	// Here you would typically save the URL to your database or storage
 	shortURL := saveURL(string(body))
 	w.WriteHeader(http.StatusCreated)
