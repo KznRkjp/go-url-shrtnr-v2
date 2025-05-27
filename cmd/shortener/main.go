@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/KznRkjp/go-url-shrtnr-v2/internal/app" // Adjust the import path as necessary
+	"github.com/KznRkjp/go-url-shrtnr-v2/internal/router"
+	// Adjust the import path as necessary
 )
 
 var Server = "localhost:8080"
@@ -12,11 +13,9 @@ var Server = "localhost:8080"
 func main() {
 
 	fmt.Println("Starting URL Shortener Service...")
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, app.URLPostHandler)
-	mux.HandleFunc(`/{id}`, app.URLGetHandler)
+	r := router.NewRouter()
 	fmt.Printf("Listening on http://%s", Server)
-	err := http.ListenAndServe(Server, mux)
+	err := http.ListenAndServe(Server, r)
 
 	if err != nil {
 		panic(err)
