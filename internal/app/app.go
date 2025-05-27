@@ -23,9 +23,7 @@ func URLPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Here you would typically save the URL to your database or storage
-
 	shortURL := saveURL(string(body))
-	db.PrintAllURLs() // Print all URLs for debugging purposes
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf("http://localhost:8080/%s", shortURL)))
 
@@ -53,14 +51,12 @@ func URLGetHandler(w http.ResponseWriter, r *http.Request) {
 
 func saveURL(url string) string {
 	shortened := urlgen.GenerateShortKey()
-
 	urlData := models.URL{
 		Original:  url,
 		Shortened: shortened, // Example shortened URL
 		CreatedAt: time.Now(),
 	}
 	db.SaveURL(urlData) // Example timestamp
-	fmt.Printf("Saving URL: %+v\n", url)
 	return shortened
 }
 
