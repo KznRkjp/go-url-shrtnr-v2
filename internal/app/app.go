@@ -2,7 +2,13 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"time"
+
+	"github.com/KznRkjp/go-url-shrtnr-v2/internal/db"
+	"github.com/KznRkjp/go-url-shrtnr-v2/internal/models"
+	"github.com/KznRkjp/go-url-shrtnr-v2/internal/urlgen"
 )
 
 func URLPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -10,9 +16,19 @@ func URLPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// Handle URL shortening logic here
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	// Here you would typically save the URL to your database or storage
+
+	shortURL := saveURL(string(body))
+	db.PrintAllURLs() // Print all URLs for debugging purposes
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("URL shortened successfully"))
+	w.Write([]byte(fmt.Sprintf("http://localhost:8080/%s", shortURL)))
+
 }
 func URLGetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -21,13 +37,33 @@ func URLGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Extract the ID from the URL path
 	id := r.URL.Path[len("/"):] // Assuming the path is like /{id}
-	fmt.Println(r.URL.Path)
 	if id == "" {
 		http.Error(w, "ID is required", http.StatusBadRequest)
 		return
 	}
 	// Here you would typically look up the ID in your database or storage
 	// Handle URL retrieval logic here
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	urlData, ok := db.GetURL(id)
+	if !ok {
+		http.Error(w, "URL not found", http.StatusNotFound)
+		return
+	}
+	redirect(urlData, w, r)
+}
+
+func saveURL(url string) string {
+	shortened := urlgen.GenerateShortKey()
+
+	urlData := models.URL{
+		Original:  url,
+		Shortened: shortened, // Example shortened URL
+		CreatedAt: time.Now(),
+	}
+	db.SaveURL(urlData) // Example timestamp
+	fmt.Printf("Saving URL: %+v\n", url)
+	return shortened
+}
+
+func redirect(urlData models.URL, w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, urlData.Original, http.StatusTemporaryRedirect)
 }
