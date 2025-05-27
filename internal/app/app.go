@@ -24,7 +24,7 @@ func URLPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Here you would typically save the URL to your database or storage
 	shortURL := saveURL(string(body))
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf("http://localhost:8080/%s", shortURL)))
 
 }
