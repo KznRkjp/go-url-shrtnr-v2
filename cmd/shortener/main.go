@@ -15,6 +15,7 @@ import (
 // var Server = "localhost:8080"
 
 func main() {
+
 	if err := logging.InitLogger(); err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
@@ -22,7 +23,6 @@ func main() {
 	fmt.Println("Starting URL Shortener Service...")
 	r := router.NewRouter()
 	fmt.Printf("Listening on http://%s\n", config.Prod.Server)
-	err := http.ListenAndServe(config.Prod.Server, r)
 
 	if err != nil {
 		panic(err)
