@@ -9,24 +9,25 @@ import (
 	"github.com/KznRkjp/go-url-shrtnr-v2/internal/flags"
 	"github.com/KznRkjp/go-url-shrtnr-v2/internal/logging"
 	"github.com/KznRkjp/go-url-shrtnr-v2/internal/router"
-	// Adjust the import path as necessary
 )
 
-// var Server = "localhost:8080"
-
 func main() {
-
+	// Initialize logger
 	if err := logging.InitLogger(); err != nil {
-		log.Fatalf("failed to initialize logger: %v", err)
+		log.Fatalf("Failed to initialize logger: %v", err)
 	}
+
+	// Parse flags and update config
 	flags.ParseFlags(config.Prod)
+
 	fmt.Println("Starting URL Shortener Service...")
-	r := router.NewRouter()
 	fmt.Printf("Listening on http://%s\n", config.Prod.Server)
-	err := http.ListenAndServe(config.Prod.Server, r)
 
-	if err != nil {
-		panic(err)
+	// Create router
+	r := router.NewRouter()
+
+	// Start HTTP server
+	if err := http.ListenAndServe(config.Prod.Server, r); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
-
 }

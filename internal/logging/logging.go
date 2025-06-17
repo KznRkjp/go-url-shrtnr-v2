@@ -18,72 +18,63 @@ func InitLogger() error {
 	return nil
 }
 
-func WithLogging(h http.Handler) http.Handler {
-	logFn := func(w http.ResponseWriter, r *http.Request) {
-		// функция Now() возвращает текущее время
-		start := time.Now()
+// WithLogging is a middleware that logs HTTP requests and responses.
+func WithLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if Logger == nil {
+			// Fallback to default logger or panic
+			zap.NewExample().Sugar().Warn("Logger is not initialized, using fallback logger")
+		}
 
-		// эндпоинт /ping
+		start := time.Now()
 		uri := r.RequestURI
-		// метод запроса
 		method := r.Method
 		ip := r.RemoteAddr
 		bodySize := r.ContentLength
-		responseData := &responseData{
-			status: 0,
-			size:   0,
-		}
-		lw := loggingResponseWriter{
-			ResponseWriter: w, // встраиваем оригинальный http.ResponseWriter
+
+		responseData := &responseData{}
+		lw := &loggingResponseWriter{
+			ResponseWriter: w,
 			responseData:   responseData,
 		}
-		h.ServeHTTP(&lw, r) // внедряем реализацию http.ResponseWriter
 
-		// Since возвращает разницу во времени между start
-		// и моментом вызова Since. Таким образом можно посчитать
-		// время выполнения запроса.
+		next.ServeHTTP(lw, r)
+
 		duration := time.Since(start)
 
-		// отправляем сведения о запросе в zap
-		Logger.Infow(
-			"Request processed",
-			"uri", uri,
-			"method", method,
-			"duration", duration,
-			"ip", ip,
-			"body_size", bodySize,
-			"status", responseData.status,
-			"size", responseData.size,
-		)
-
-	}
-	// возвращаем функционально расширенный хендлер
-	return http.HandlerFunc(logFn)
+		// Use the initialized logger if available
+		if Logger != nil {
+			Logger.Infow(
+				"Request processed",
+				"uri", uri,
+				"method", method,
+				"duration", duration,
+				"ip", ip,
+				"body_size", bodySize,
+				"status", responseData.status,
+				"size", responseData.size,
+			)
+		}
+	})
 }
 
-type (
-	// берём структуру для хранения сведений об ответе
-	responseData struct {
-		status int
-		size   int
-	}
+type responseData struct {
+	status int
+	size   int
+}
 
-	// добавляем реализацию http.ResponseWriter
-	loggingResponseWriter struct {
-		http.ResponseWriter // встраиваем оригинальный http.ResponseWriter
-		responseData        *responseData
-	}
-)
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	responseData *responseData
+}
 
-func (r *loggingResponseWriter) Write(b []byte) (int, error) {
-	// записываем ответ, используя оригинальный http.ResponseWriter
-	size, err := r.ResponseWriter.Write(b)
-	r.responseData.size += size // захватываем размер
+func (lrw *loggingResponseWriter) Write(b []byte) (int, error) {
+	size, err := lrw.ResponseWriter.Write(b)
+	lrw.responseData.size += size
 	return size, err
 }
 
-func (r *loggingResponseWriter) WriteHeader(statusCode int) {
-	// записываем код статуса, используя оригинальный http.ResponseWriter
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.responseData.status = statusCode // захватываем код статуса
+func (lrw *loggingResponseWriter) WriteHeader(statusCode int) {
+	lrw.ResponseWriter.WriteHeader(statusCode)
+	lrw.responseData.status = statusCode
 }
