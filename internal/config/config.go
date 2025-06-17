@@ -9,7 +9,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		Server:         "localhost:8888",
-		ServerResponse: "http://localhost:8000",
+		Server:         "localhost:8080",
+		ServerResponse: "http://localhost:8080",
 	}
 }
