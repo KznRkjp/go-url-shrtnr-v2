@@ -3,8 +3,8 @@ package config
 var Prod = NewConfig()
 
 type Config struct {
-	Server         string `json:"server"`
-	ServerResponse string `json:"server_response"`
+	Server         string `json:"server" env:"SERVER_ADDRESS"`
+	ServerResponse string `json:"server_response" env:"BASE_URL"`
 }
 
 func NewConfig() *Config {
