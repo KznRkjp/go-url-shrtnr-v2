@@ -23,6 +23,7 @@ func main() {
 	fmt.Println("Starting URL Shortener Service...")
 	r := router.NewRouter()
 	fmt.Printf("Listening on http://%s\n", config.Prod.Server)
+	err := http.ListenAndServe(config.Prod.Server, r)
 
 	if err != nil {
 		panic(err)
